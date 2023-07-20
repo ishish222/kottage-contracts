@@ -4,20 +4,92 @@ require('dotenv').config()
 const INFURA_API_KEY = process.env.INFURA_API_KEY
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY
 const PRIVATE_KEY = process.env.PRIVATE_KEY
+const ABI = process.env.ABI
+const TARGET = process.env.TARGET
+const NETWORK = process.env.NETWORK
 
 console.log(`INFURA_API_KEY=${INFURA_API_KEY}`);
 console.log(`ALCHEMY_API_KEY=${ALCHEMY_API_KEY}`);
 
-task("getTokenURI")
-  .addParam("contract")
-  .addParam("tokenid")
+task("721_balanceOf")
+  .addOptionalParam("abi", "ABI", `${ABI}`)
+  .addOptionalParam("contract", "Target contract", `${TARGET}`)
+  .addParam("owner")
   .setAction(async (taskArgs) => {
-    const Token = await ethers.getContractFactory("AnxioCrew");
-    const TokenConnected = await Token.attach(taskArgs.contract);
+    const Factory = await ethers.getContractFactory(taskArgs.abi);
+    const contract = await Factory.attach(taskArgs.contract);
 
-    const uri = await TokenConnected.tokenURI(taskArgs.tokenid);
-    console.log(`URI is: ${uri}`);
+    const balance = await contract.balanceOf(taskArgs.owner);
+    console.log(`Balance is: ${balance}`);
 });
+
+
+task("721_symbol")
+  .addParam("abi")
+  .addParam("contract")
+  .setAction(async (taskArgs) => {
+    console.log(1)
+    const Factory = await ethers.getContractFactory(taskArgs.abi);
+    console.log(1)
+    const contract = await Factory.attach(taskArgs.contract);
+    console.log(1)
+
+    const res = await contract.symbol();
+    console.log(1)
+    console.log(`Balance is: ${res}`);
+});
+
+
+task("721_name")
+  .addParam("abi")
+  .addParam("contract")
+  .setAction(async (taskArgs) => {
+    const Factory = await ethers.getContractFactory(taskArgs.abi);
+    const contract = await Factory.attach(taskArgs.contract);
+
+    const res = await contract.name();
+    console.log(`Balance is: ${res}`);
+});
+
+
+task("721_ownerOf")
+  .addParam("abi")
+  .addParam("contract")
+  .addParam("id")
+  .setAction(async (taskArgs) => {
+    const Factory = await ethers.getContractFactory(taskArgs.abi);
+    const contract = await Factory.attach(taskArgs.contract);
+
+    const result = await contract.ownerOf(taskArgs.id);
+    console.log(`Owner is: ${result}`);
+});
+
+task("721_safeMint")
+  .addParam("abi")
+  .addParam("contract")
+  .addParam("to")
+  .addParam("uri")
+  .setAction(async (taskArgs) => {
+    const Factory = await ethers.getContractFactory(taskArgs.abi);
+    const contract = await Factory.attach(taskArgs.contract);
+
+    const result = await contract.safeMint(taskArgs.to, taskArgs.uri);
+    console.log(`Result is: ${result}`);
+});
+
+
+task("721_tokenURI")
+  .addParam("abi")
+  .addParam("contract")
+  .addParam("id")
+  .setAction(async (taskArgs) => {
+    const Factory = await ethers.getContractFactory(taskArgs.abi);
+    const contract = await Factory.attach(taskArgs.contract);
+
+    const result = await contract.tokenURI(taskArgs.id);
+    console.log(`Result is: ${result}`);
+});
+
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
