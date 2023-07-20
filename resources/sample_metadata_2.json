@@ -1,0 +1,19 @@
+{
+  "description": "Serene cottage in Concorde, Massachusetts", 
+  "external_url": "https://ishish.io", 
+  "image": "https://uploads-ssl.webflow.com/64664cce2e3c006e82490429/64b92adb61963f9c135287cc_sample_metadata_2_2.png",
+  "name": "Serene cottage in Concorde",
+  "attributes": 
+    [
+    {
+      "display_type": "date",
+      "trait_type": "Date start", 
+      "value": 1685592000
+    }, 
+    {
+      "display_type": "date",
+      "trait_type": "Date end", 
+      "value": 1685937600
+    }
+    ]
+}

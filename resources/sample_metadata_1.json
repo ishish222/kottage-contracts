@@ -1,0 +1,19 @@
+{
+  "description": "Beautiful house by the beach in western France", 
+  "external_url": "https://ishish.io", 
+  "image": "https://uploads-ssl.webflow.com/64664cce2e3c006e82490429/64b92898cf90f859d1bee6de_sample_metadata_1_1.png", 
+  "name": "Beautiful house, Western France",
+  "attributes": 
+    [
+    {
+      "display_type": "date",
+      "trait_type": "Date start", 
+      "value": 1688184000
+    }, 
+    {
+      "display_type": "date",
+      "trait_type": "Date end", 
+      "value": 1688961600
+    }
+    ]
+}
