@@ -11,6 +11,23 @@ const NETWORK = process.env.NETWORK
 console.log(`INFURA_API_KEY=${INFURA_API_KEY}`);
 console.log(`ALCHEMY_API_KEY=${ALCHEMY_API_KEY}`);
 
+task("KottageFactoryCreate")
+  .addOptionalParam("abi", "ABI", `${ABI}`)
+  .addOptionalParam("contract", "Target contract", `${TARGET}`)
+  .addParam("name")
+  .addParam("symbol")
+  .addParam("uri")
+  .addParam("owner")
+  .setAction(async (taskArgs) => {
+    const Factory = await ethers.getContractFactory(taskArgs.abi);
+    const contract = await Factory.attach(taskArgs.contract);
+
+    const result = await contract.createKottageToken(taskArgs.name, taskArgs.symbol, taskArgs.uri, taskArgs.owner);
+
+    console.log(`KottageToken ${taskArgs.name} with owner ${taskArgs.owner} deployed at: ${result}`);
+});
+
+
 task("721_balanceOf")
   .addOptionalParam("abi", "ABI", `${ABI}`)
   .addOptionalParam("contract", "Target contract", `${TARGET}`)
