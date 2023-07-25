@@ -4,13 +4,16 @@ function printEvent(log)
 {
   if (log.eventName === "TokenMinted") {
     // Process the log
-    console.log(`TokenMinted event: ${log.args[0]}`);
+    console.log(`TokenMinted event: ${log.args[0]}, from ${log.args[1]} to ${log.args[2]}`);
   }
   else if (log.eventName === "TokenBurned") {
     console.log(`TokenBurned event: ${log.args[0]}`);
   }
   else if (log.eventName === "TokenSplit") {
     console.log(`TokenSplit event: ${log.args[0]}`);
+  }
+  else if (log.eventName === "Comparing") {
+    console.log(`Comparing event: ${log.args[0]} and ${log.args[1]}`);
   }
 }      
 
@@ -82,12 +85,7 @@ describe("KottageToken", function () {
       ],
     ];
 
-    const newRentalPeriods2 = [
-      [
-        1690171200,
-        1690689600
-      ],
-    ];
+    const tokensToMerge = [ 1, 2 ];
 
     const hardhatTokenFactory = await ethers.getContractFactory("KottageToken");
     const hardhatToken = await hardhatTokenFactory.deploy(name, symbol);
@@ -113,6 +111,16 @@ describe("KottageToken", function () {
     }
 
     expect(await hardhatToken.balanceOf(owner.address)).to.equal(2);
+
+    // let's merge it back into: 2023-07-24-2023-07-30
+    const tx3 = await hardhatToken.merge(tokensToMerge, "https://example.com/test.json");
+    const receipt3 = await tx3.wait();
+
+    for (let log of receipt3.logs) {
+      printEvent(log);
+    }
+
+    expect(await hardhatToken.balanceOf(owner.address)).to.equal(1);
   });
 });
 

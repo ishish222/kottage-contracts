@@ -21,7 +21,7 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage {
 
     event TokensMerged(uint256[]);
     event TokenSplit(uint256);
-    event TokenMinted(uint256);
+    event TokenMinted(uint256, uint256, uint256);
     event TokenBurned(uint256);
 
     mapping(uint256 => rentalPeriod) public rentalPeriods;
@@ -59,14 +59,13 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage {
 
         for (uint256 i=0; i < tokenIds.length-1; i++)
         {
-            // check that token has been actually issued (necessary?)
-            // check that token has not been burned (necessary?)
-            
             require(_isApprovedOrOwner(_msgSender(), tokenIds[i]), "ERC721: caller is not token owner or approved");
             
             // check that there is smooth transition between a batch of tokens
-            require((DateTime.diffSeconds(rentalPeriods[i].end, rentalPeriods[i+1].start) == 0), "KottageToken: tokens in the batch are not sequential");
+            require((DateTime.diffSeconds(rentalPeriods[tokenIds[i]].end, rentalPeriods[tokenIds[i+1]].start) == 0), "KottageToken: tokens in the batch are not sequential");
         }
+        // check the ownership of the last token in the sequence
+        require(_isApprovedOrOwner(_msgSender(), tokenIds[tokenIds.length-1]), "ERC721: caller is not token owner or approved");
     }
 
     function _merge(uint256[] calldata tokenIds, string calldata uri) internal
@@ -116,7 +115,7 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage {
         
         _setTokenURI(tokenId, uri);
 
-        emit TokenMinted(tokenId);
+        emit TokenMinted(tokenId, rentalPeriods[tokenId].start, rentalPeriods[tokenId].end);
     }
 
     function tokenURI(uint256 tokenId)
