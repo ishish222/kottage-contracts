@@ -16,11 +16,11 @@ contract KottageTokenFactory is Context, Ownable {
         return addr2Tokens[addr].length;
     }
 
-    function createKottageToken(string memory name, string memory symbol) external returns (address) {
+    function createKottageToken(string memory name, string memory symbol, string memory uri) external returns (address) {
         address token;
         KottageToken KToken;
 
-        KToken = new KottageToken(name, symbol);
+        KToken = new KottageToken(name, symbol, uri);
         KToken.transferOwnership(_msgSender());
 
         token = address(KToken);

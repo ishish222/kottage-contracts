@@ -26,8 +26,9 @@ describe("KottageTokenFactory", function () {
 
     const symbol = "TST";
     const name = "TestToken";
+    const uri = "https://example.com/test.json";
 
-    const tx = await hardhatContract.createKottageToken(name, symbol);
+    const tx = await hardhatContract.createKottageToken(name, symbol, uri);
     const receipt = await tx.wait();
 
     for (let log of receipt.logs) {
@@ -45,10 +46,12 @@ describe("KottageTokenFactory", function () {
     const _owner = await hardhatToken.owner();
     const _symbol = await hardhatToken.symbol();
     const _name = await hardhatToken.name();
+    const _uri = await hardhatToken.uri();
 
     expect(_owner).to.equal(owner.address);
     expect(_symbol).to.equal(symbol);
     expect(_name).to.equal(name);
+    expect(_uri).to.equal(uri);
   });
 });
 

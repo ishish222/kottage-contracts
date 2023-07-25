@@ -23,28 +23,32 @@ describe("KottageToken", function () {
 
     const symbol = "TST";
     const name = "TestToken";
+    const uri = "https://example.com/test.json";
 
     const hardhatTokenFactory = await ethers.getContractFactory("KottageToken");
-    const hardhatToken = await hardhatTokenFactory.deploy(name, symbol);
+    const hardhatToken = await hardhatTokenFactory.deploy(name, symbol, uri);
     const _owner = await hardhatToken.owner();
     const _symbol = await hardhatToken.symbol();
     const _name = await hardhatToken.name();
+    const _uri = await hardhatToken.uri();
 
     expect(_owner).to.equal(owner.address);
     expect(_symbol).to.equal(symbol);
     expect(_name).to.equal(name);
+    expect(_uri).to.equal(uri);
   }),
   it("Should properly mint a token and transfer it to another user", async function() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     const symbol = "TST";
     const name = "TestToken";
+    const uri = "https://example.com/test.json";
 
     const hardhatTokenFactory = await ethers.getContractFactory("KottageToken");
-    const hardhatToken = await hardhatTokenFactory.deploy(name, symbol);
+    const hardhatToken = await hardhatTokenFactory.deploy(name, symbol, uri);
 
     // mint a token for a week: 2023-07-24-2023-07-30
-    const tx = await hardhatToken.safeMint(owner.address, "https://example.com/test.json", 1690171200, 1690689600);
+    const tx = await hardhatToken.safeMint(owner.address, 1690171200, 1690689600);
     const receipt = await tx.wait();
 
     for (let log of receipt.logs) {
@@ -72,6 +76,7 @@ describe("KottageToken", function () {
 
     const symbol = "TST";
     const name = "TestToken";
+    const uri = "https://example.com/test.json";
 
     // 2023-07-24-2023-07-28 and 2023-07-28-2023-07-30 encoded as UNIX timestamps
     const newRentalPeriods = [
@@ -88,10 +93,10 @@ describe("KottageToken", function () {
     const tokensToMerge = [ 1, 2 ];
 
     const hardhatTokenFactory = await ethers.getContractFactory("KottageToken");
-    const hardhatToken = await hardhatTokenFactory.deploy(name, symbol);
+    const hardhatToken = await hardhatTokenFactory.deploy(name, symbol, uri);
 
     // mint a token for a week: 2023-07-24-2023-07-30
-    const tx = await hardhatToken.safeMint(owner.address, "https://example.com/test.json", 1690171200, 1690689600);
+    const tx = await hardhatToken.safeMint(owner.address, 1690171200, 1690689600);
     const receipt = await tx.wait();
 
     for (let log of receipt.logs) {
@@ -103,7 +108,7 @@ describe("KottageToken", function () {
     expect(await hardhatToken.balanceOf(owner.address)).to.equal(1);
 
     // let's split it into: 2023-07-24-2023-07-28 and 2023-07-28-2023-07-30
-    const tx2 = await hardhatToken.split(tokenId, newRentalPeriods, "https://example.com/test.json");
+    const tx2 = await hardhatToken.split(tokenId, newRentalPeriods);
     const receipt2 = await tx2.wait();
 
     for (let log of receipt2.logs) {
@@ -113,7 +118,7 @@ describe("KottageToken", function () {
     expect(await hardhatToken.balanceOf(owner.address)).to.equal(2);
 
     // let's merge it back into: 2023-07-24-2023-07-30
-    const tx3 = await hardhatToken.merge(tokensToMerge, "https://example.com/test.json");
+    const tx3 = await hardhatToken.merge(tokensToMerge);
     const receipt3 = await tx3.wait();
 
     for (let log of receipt3.logs) {

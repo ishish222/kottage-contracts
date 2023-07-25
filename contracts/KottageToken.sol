@@ -12,6 +12,8 @@ import "@quant-finance/solidity-datetime/contracts/DateTime.sol";
 contract KottageToken is ERC721, Ownable, ERC721URIStorage {
     using Counters for Counters.Counter;
 
+    string public uri;
+
     Counters.Counter private _tokenIdCounter;
 
     struct rentalPeriod {
@@ -26,8 +28,8 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage {
 
     mapping(uint256 => rentalPeriod) public rentalPeriods;
 
-    constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {
-        
+    constructor(string memory name_, string memory symbol_, string memory uri_) ERC721(name_, symbol_) {
+        uri = uri_;        
     }
     
     modifier isMergeable(uint256[] calldata tokenIds)
@@ -68,12 +70,12 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage {
         require(_isApprovedOrOwner(_msgSender(), tokenIds[tokenIds.length-1]), "ERC721: caller is not token owner or approved");
     }
 
-    function _merge(uint256[] calldata tokenIds, string calldata uri) internal
+    function _merge(uint256[] calldata tokenIds) internal
     {
         uint256 mergedStart = rentalPeriods[tokenIds[0]].start;                   // retrieve date from metadata
         uint256 mergedEnd = rentalPeriods[tokenIds[tokenIds.length-1]].end;
         
-        safeMint(_msgSender(), uri, mergedStart, mergedEnd);
+        safeMint(_msgSender(), mergedStart, mergedEnd);
 
         for (uint256 i=0; i < tokenIds.length; i++)
         {
@@ -81,29 +83,29 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage {
         }
     }
     
-    function merge(uint256[] calldata tokenIds, string calldata uri) public isMergeable(tokenIds) {
-        _merge(tokenIds, uri);
+    function merge(uint256[] calldata tokenIds) public isMergeable(tokenIds) {
+        _merge(tokenIds);
 
         emit TokensMerged(tokenIds);
     }
 
-    function _split(uint256 tokenId, rentalPeriod[] calldata new_rentals, string calldata uri) internal
+    function _split(uint256 tokenId, rentalPeriod[] calldata new_rentals) internal
     {
         for (uint256 i=0; i < new_rentals.length; i++)
         {
-            safeMint(_msgSender(), uri, new_rentals[i].start, new_rentals[i].end);    
+            safeMint(_msgSender(), new_rentals[i].start, new_rentals[i].end);    
         }
 
         _burn(tokenId);
     }
 
-    function split(uint256 tokenId, rentalPeriod[] calldata new_rentals, string calldata uri) public isSplittable(tokenId, new_rentals) {
-        _split(tokenId, new_rentals, uri);
+    function split(uint256 tokenId, rentalPeriod[] calldata new_rentals) public isSplittable(tokenId, new_rentals) {
+        _split(tokenId, new_rentals);
 
         emit TokenSplit(tokenId);
     }
 
-    function safeMint(address to, string memory uri, uint256 start, uint256 end) public onlyOwner {
+    function safeMint(address to, uint256 start, uint256 end) public onlyOwner {
         // check for overbooking
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
