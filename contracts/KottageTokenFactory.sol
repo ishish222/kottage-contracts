@@ -10,7 +10,7 @@ contract KottageTokenFactory is Context, Ownable {
 
     mapping(address => address[]) public addr2Tokens;
 
-    event KottageTokenCreated(address addr, string name, string symbol);
+    event KottageTokenCreated(address addr, address owner, string name, string symbol);
     
     function addr2TokensLength(address addr) public view returns (uint256) {
         return addr2Tokens[addr].length;
@@ -26,7 +26,10 @@ contract KottageTokenFactory is Context, Ownable {
         token = address(KToken);
         addr2Tokens[_msgSender()].push(token);
 
-        emit KottageTokenCreated(token, name, symbol);
+        emit KottageTokenCreated(token, KToken.owner(), name, symbol);
         return token;
+    }
+    function getAddr2TokenByIndex(address addr, uint index) public view returns (address) {
+        return addr2Tokens[addr][index];
     }
 }
