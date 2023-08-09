@@ -7,12 +7,12 @@
 const hre = require("hardhat");
 
 async function main() {
-  const factory = await hre.ethers.deployContract("KottageTokenFactory");
+  const factory = await hre.ethers.deployContract("KottageContractFactory");
 
   await factory.waitForDeployment();
 
   console.log(
-    `TokenFactory deployed to ${factory.target}`
+    `ContractFactory deployed to ${factory.target}`
   );
 }
 
