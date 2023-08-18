@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@quant-finance/solidity-datetime/contracts/DateTime.sol";
 
-contract KottageToken is ERC721, Ownable, ERC721URIStorage, ERC721Enumerable {
+contract KottageToken is ERC721, Ownable, ERC721URIStorage, ERC721Enumerable, ERC721Burnable {
     using Counters for Counters.Counter;
 
     string public uri;
@@ -39,23 +39,27 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage, ERC721Enumerable {
         _;
     }
 
-    modifier isSplittable(uint256 tokenId, rentalPeriod[] calldata new_periods)
+    modifier isSplittable(uint256 tokenId, uint256[] calldata splittingDates)
     {
-        _isBatchSplittable(tokenId, new_periods);
+        _isBatchSplittable(tokenId, splittingDates);
         _;
     } 
     
-    function _isBatchSplittable(uint256 tokenId, rentalPeriod[] calldata new_periods) public view {
+    function _isBatchSplittable(uint256 tokenId, uint256[] calldata splittingDates) public view {
 
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
 
-        for (uint256 i=0; i < new_periods.length-1; i++)
+        uint256 tokenRentalStart = rentalPeriods[tokenId].start;
+        uint256 tokenRentalEnd = rentalPeriods[tokenId].end;
+        uint256 splittingDatesLength = splittingDates.length;
+
+        require((splittingDates[0] > tokenRentalStart), "KottageToken: splitting date is earlier than token start date"); 
+        for (uint256 i=0; i < splittingDates.length-1; i++)
         {
-            // check that there is smooth transition between a batch of tokens
-            require((DateTime.diffSeconds(new_periods[i].end, new_periods[i+1].start) == 0), "KottageToken: tokens in the batch are not sequential");
+            // check that splitting points are sorted
+            require((splittingDates[i] < splittingDates[i+1]), "KottageToken: splitting dates are not sorted"); 
         }
-        require(new_periods[0].start == rentalPeriods[tokenId].start, "KottageToken: Proposed rental start of sequence does not match rental start of token");
-        require(new_periods[new_periods.length-1].end == rentalPeriods[tokenId].end, "KottageToken: Proposed rental end of sequence does not match rental end of token");
+        require((splittingDates[splittingDatesLength-1] < tokenRentalEnd), "KottageToken: splitting date is later than token end date"); 
     }
 
     function _isBatchMergeable(uint256[] calldata tokenIds) public view {
@@ -90,17 +94,26 @@ contract KottageToken is ERC721, Ownable, ERC721URIStorage, ERC721Enumerable {
         emit TokensMerged(tokenIds);
     }
 
-    function _split(uint256 tokenId, rentalPeriod[] calldata new_rentals) internal
+    function _split(uint256 tokenId, uint256[] calldata splittingDates) internal
     {
-        for (uint256 i=0; i < new_rentals.length; i++)
+        uint256 tokenRentalStart = rentalPeriods[tokenId].start;
+        uint256 tokenRentalEnd = rentalPeriods[tokenId].end;
+        uint256 splittingDatesLength = splittingDates.length;
+
+        // initial token
+        safeMint(_msgSender(), tokenRentalStart, splittingDates[0]);
+        for (uint256 i=0; i < splittingDatesLength-1; i++)
         {
-            safeMint(_msgSender(), new_rentals[i].start, new_rentals[i].end);    
+            // tokens in-between
+            safeMint(_msgSender(), splittingDates[i], splittingDates[i+1]);
         }
+        // final token
+        safeMint(_msgSender(), splittingDates[splittingDatesLength-1], tokenRentalEnd);
 
         _burn(tokenId);
     }
 
-    function split(uint256 tokenId, rentalPeriod[] calldata new_rentals) public isSplittable(tokenId, new_rentals) {
+    function split(uint256 tokenId, uint256[] calldata new_rentals) public isSplittable(tokenId, new_rentals) {
         _split(tokenId, new_rentals);
 
         emit TokenSplit(tokenId);

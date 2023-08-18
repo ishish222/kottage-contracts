@@ -37,7 +37,7 @@ describe("KottageToken", function () {
     expect(_name).to.equal(name);
     expect(_uri).to.equal(uri);
   }),
-  it("Should properly mint a token and transfer it to another user", async function() {
+  it("Should properly mint a token and transfer it to another user, then burn it", async function() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     const symbol = "TST";
@@ -70,6 +70,11 @@ describe("KottageToken", function () {
     await hardhatToken.connect(addr2).transferFrom(addr1.address, addr2.address, tokenId);
     expect(await hardhatToken.balanceOf(addr1.address)).to.equal(0);
     expect(await hardhatToken.balanceOf(addr2.address)).to.equal(1);
+
+    // Burn the token
+    await hardhatToken.connect(addr2).burn(tokenId);
+    expect(await hardhatToken.balanceOf(addr1.address)).to.equal(0);
+    expect(await hardhatToken.balanceOf(addr2.address)).to.equal(0);
   }),
   it("Should properly split a token and then merge resulting tokens", async function() {
     const [owner] = await ethers.getSigners();
@@ -77,20 +82,6 @@ describe("KottageToken", function () {
     const symbol = "TST";
     const name = "TestToken";
     const uri = "https://example.com/test.json";
-
-    // 2023-07-24-2023-07-28 and 2023-07-28-2023-07-30 encoded as UNIX timestamps
-    const newRentalPeriods = [
-      [
-        1690171200,
-        1690516800
-      ],
-      [
-        1690516800,
-        1690689600
-      ],
-    ];
-
-    const tokensToMerge = [ 1, 2 ];
 
     const hardhatTokenFactory = await ethers.getContractFactory("KottageToken");
     const hardhatToken = await hardhatTokenFactory.deploy(name, symbol, uri);
@@ -108,7 +99,13 @@ describe("KottageToken", function () {
     expect(await hardhatToken.balanceOf(owner.address)).to.equal(1);
 
     // let's split it into: 2023-07-24-2023-07-28 and 2023-07-28-2023-07-30
-    const tx2 = await hardhatToken.split(tokenId, newRentalPeriods);
+
+    // 2023-07-24-2023-07-28 and 2023-07-28-2023-07-30 encoded as UNIX timestamps
+    const splittingDates = [
+        1690516800
+    ];
+    
+    const tx2 = await hardhatToken.split(tokenId, splittingDates);
     const receipt2 = await tx2.wait();
 
     for (let log of receipt2.logs) {
@@ -118,6 +115,8 @@ describe("KottageToken", function () {
     expect(await hardhatToken.balanceOf(owner.address)).to.equal(2);
 
     // let's merge it back into: 2023-07-24-2023-07-30
+    const tokensToMerge = [ 1, 2 ];
+    
     const tx3 = await hardhatToken.merge(tokensToMerge);
     const receipt3 = await tx3.wait();
 
